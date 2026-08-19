@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { ShoppingBag, BookOpen, QrCode, Trash2, ShieldCheck, AlertTriangle, RefreshCw, X, ArrowRight, CheckCircle2, CreditCard, ExternalLink, Smartphone } from 'lucide-react';
+import { ShoppingBag, BookOpen, QrCode, Trash2, ShieldCheck, AlertTriangle, RefreshCw, X, ArrowRight, CheckCircle2, CreditCard, ExternalLink, Smartphone, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 interface CartModalProps {
