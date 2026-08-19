@@ -178,15 +178,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateProductStock = (productId: string, newQty: number) => {
+    const qty = Math.max(0, newQty);
     setProducts(prev =>
       prev.map(p => {
         if (p.id === productId) {
-          const qty = Math.max(0, newQty);
           return { ...p, stockQty: qty, inStock: qty > 0 };
         }
         return p;
       })
     );
+
+    if (isSupabaseConfigured()) {
+      supabase
+        .from('products')
+        .update({ stock_qty: qty, in_stock: qty > 0 })
+        .eq('id', productId)
+        .then(({ error }) => {
+          if (error) console.error('Supabase stock update error:', error);
+        });
+    }
   };
 
   // Cart operations
@@ -295,6 +305,44 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }));
         }
 
+        // Sync order to Supabase live DB if connected
+        if (isSupabaseConfigured()) {
+          supabase.from('orders').insert([{
+            id: result.order.id,
+            idempotency_key: result.order.idempotencyKey,
+            customer_name: result.order.customerName,
+            customer_phone: result.order.customerPhone,
+            address: result.order.address,
+            items: result.order.items,
+            total_amount: result.order.totalAmount,
+            payment_method: result.order.paymentMethod,
+            payment_status: result.order.paymentStatus,
+            status: result.order.status,
+            order_type: result.order.orderType,
+            assigned_delivery_boy: result.order.assignedDeliveryBoy
+          }]).then(({ error }) => {
+            if (error) console.error('Supabase Order Insert Error:', error);
+          });
+
+          if (paymentMethod === 'khata') {
+            supabase.from('khata_entries').insert([{
+              id: 'kh-' + Date.now(),
+              customer_id: 'cust_42',
+              customer_name: khata.customerName,
+              customer_phone: khata.customerPhone,
+              order_id: result.order.id,
+              date: new Date().toISOString().split('T')[0],
+              description: `${orderType.replace('_', ' ').toUpperCase()} Order (${result.order.id})`,
+              amount: result.order.totalAmount,
+              type: 'debit',
+              balance_after: khata.totalBalance + result.order.totalAmount,
+              items_summary: orderItems.map(i => `${i.productName} x${i.quantity}`).join(', ')
+            }]).then(({ error }) => {
+              if (error) console.error('Supabase Khata Entry Error:', error);
+            });
+          }
+        }
+
         clearCart();
       }
       return { success: true, isCached: result.isCached, order: result.order };
@@ -307,6 +355,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setOrders(prev =>
       prev.map(ord => (ord.id === orderId ? { ...ord, status } : ord))
     );
+    if (isSupabaseConfigured()) {
+      supabase.from('orders').update({ status }).eq('id', orderId).then(({ error }) => {
+        if (error) console.error('Supabase order status error:', error);
+      });
+    }
   };
 
   const assignDeliveryBoy = (orderId: string, deliveryBoyId: string) => {
@@ -322,6 +375,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         db.id === deliveryBoyId ? { ...db, activeOrders: db.activeOrders + 1, status: 'on_delivery' } : db
       )
     );
+    if (isSupabaseConfigured()) {
+      supabase.from('orders').update({ assigned_delivery_boy: deliveryBoyId, status: 'dispatched' }).eq('id', orderId).then(({ error }) => {
+        if (error) console.error('Supabase assign delivery boy error:', error);
+      });
+    }
   };
 
   const makeKhataPayment = (amount: number, description: string = 'UPI Payment Settlement') => {
@@ -341,6 +399,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       lastPaymentDate: new Date().toISOString().split('T')[0],
       entries: [newEntry, ...prev.entries]
     }));
+
+    if (isSupabaseConfigured()) {
+      supabase.from('khata_entries').insert([{
+        id: newEntry.id,
+        customer_id: 'cust_42',
+        customer_name: khata.customerName,
+        customer_phone: khata.customerPhone,
+        date: newEntry.date,
+        description,
+        amount,
+        type: 'credit',
+        balance_after: newBalance
+      }]).then(({ error }) => {
+        if (error) console.error('Supabase Khata payment settlement error:', error);
+      });
+    }
   };
 
   const updateCreditLimit = (newLimit: number) => {
