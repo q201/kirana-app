@@ -108,13 +108,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     houseNo: 'House #42, Lane 3'
   });
   
-  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>(isSupabaseConfigured() ? [] : INITIAL_PRODUCTS);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [stores] = useState<KiranaStore[]>(MOCK_STORES);
   const [activeStore, setActiveStore] = useState<KiranaStore>(MOCK_STORES[0]);
   
-  const [orders, setOrders] = useState<Order[]>(INITIAL_ORDERS);
-  const [khata, setKhata] = useState<KhataLedger>(INITIAL_KHATA_LEDGER);
+  const [orders, setOrders] = useState<Order[]>(isSupabaseConfigured() ? [] : INITIAL_ORDERS);
+  const [khata, setKhata] = useState<KhataLedger>(
+    isSupabaseConfigured()
+      ? {
+          customerId: 'cust_42',
+          customerName: 'Sunita Sharma',
+          customerPhone: '+91 99887 76655',
+          creditLimit: 5000,
+          totalBalance: 0,
+          entries: []
+        }
+      : INITIAL_KHATA_LEDGER
+  );
   const [subscriptions, setSubscriptions] = useState<Subscription[]>(INITIAL_SUBSCRIPTIONS);
   const [deliveryBoys, setDeliveryBoys] = useState<DeliveryBoy[]>(INITIAL_DELIVERY_BOYS);
   
@@ -123,14 +134,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [selectedReceiptOrder, setSelectedReceiptOrder] = useState<Order | null>(null);
   const [isSupabaseConnected, setIsSupabaseConnected] = useState<boolean>(isSupabaseConfigured());
 
-  // Fetch initial data from Supabase if configured
+  // Fetch 100% dynamic data directly from Supabase tables
   React.useEffect(() => {
     if (!isSupabaseConfigured()) return;
 
     const fetchSupabaseData = async () => {
       try {
-        const { data: prodsData } = await supabase.from('products').select('*');
-        if (prodsData && prodsData.length > 0) {
+        const { data: prodsData, error: prodsErr } = await supabase.from('products').select('*');
+        if (prodsErr) console.error('Supabase products error:', prodsErr);
+        if (prodsData) {
           const mappedProds: Product[] = prodsData.map(p => ({
             id: p.id,
             item_code: p.item_code,
@@ -151,8 +163,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           setProducts(mappedProds);
         }
 
-        const { data: ordersData } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
-        if (ordersData && ordersData.length > 0) {
+        const { data: ordersData, error: ordersErr } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
+        if (ordersErr) console.error('Supabase orders error:', ordersErr);
+        if (ordersData) {
           const mappedOrders: Order[] = ordersData.map(o => ({
             id: o.id,
             idempotencyKey: o.idempotency_key,
@@ -171,9 +184,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           setOrders(mappedOrders);
         }
 
+        const { data: khataData, error: khataErr } = await supabase.from('khata_entries').select('*').order('created_at', { ascending: false });
+        if (khataErr) console.error('Supabase khata_entries error:', khataErr);
+        if (khataData) {
+          const mappedEntries = khataData.map(k => ({
+            id: k.id,
+            orderId: k.order_id,
+            date: k.date,
+            description: k.description,
+            amount: Number(k.amount),
+            type: k.type as 'debit' | 'credit',
+            balanceAfter: Number(k.balance_after),
+            itemsSummary: k.items_summary
+          }));
+          const totalBal = mappedEntries.length > 0 ? mappedEntries[0].balanceAfter : 0;
+          setKhata(prev => ({
+            ...prev,
+            totalBalance: totalBal,
+            entries: mappedEntries
+          }));
+        }
+
         setIsSupabaseConnected(true);
       } catch (err) {
-        console.warn('Supabase fetch fallback to local state:', err);
+        console.error('Supabase dynamic fetch error:', err);
       }
     };
 
