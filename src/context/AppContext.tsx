@@ -97,6 +97,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [viewMode, setViewMode] = useState<ViewMode>('homemaker');
   const [languageMode, setLanguageMode] = useState<LanguageMode>('en');
   
+  // Sarita Vihar, Pocket B Coordinates (Default)
+  const [userLat, setUserLat] = useState<number>(28.5292);
+  const [userLng, setUserLng] = useState<number>(77.2910);
+
   const [userProfile, setUserProfile] = useState<{ name: string; phone: string; address: string; houseNo: string }>({
     name: 'Sunita Sharma',
     phone: '+91 99887 76655',
