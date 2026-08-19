@@ -47,6 +47,7 @@ interface AppContextType {
   geofenceResults: GeofenceResult[];
   activeStore: KiranaStore;
   setActiveStore: (store: KiranaStore) => void;
+  updateStoreProfile: (updates: Partial<KiranaStore>) => void;
   
   // Catalog & Cart
   products: Product[];
@@ -135,9 +136,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   
   const [products, setProducts] = useState<Product[]>(isSupabaseConfigured() ? [] : INITIAL_PRODUCTS);
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [stores] = useState<KiranaStore[]>(MOCK_STORES);
+  const [stores, setStores] = useState<KiranaStore[]>(MOCK_STORES);
   const [activeStore, setActiveStore] = useState<KiranaStore>(MOCK_STORES[0]);
-  
+
+  const updateStoreProfile = (updates: Partial<KiranaStore>) => {
+    setActiveStore(prev => {
+      const updated = { ...prev, ...updates };
+      if (isSupabaseConfigured()) {
+        supabase.from('stores').update({
+          name: updated.name,
+          owner_name: updated.ownerName,
+          phone: updated.phone,
+          address: updated.address,
+          is_open: updated.isOpen,
+          khata_accepted: updated.khataAccepted
+        }).eq('id', updated.id).then(({ error }) => {
+          if (error) console.error('Supabase store update error:', error);
+        });
+      }
+      return updated;
+    });
+  };
+
   const [orders, setOrders] = useState<Order[]>(isSupabaseConfigured() ? [] : INITIAL_ORDERS);
   const [khata, setKhata] = useState<KhataLedger>(
     isSupabaseConfigured()
@@ -165,6 +185,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const fetchSupabaseData = async () => {
       try {
+        const { data: storesData } = await supabase.from('stores').select('*');
+        if (storesData && storesData.length > 0) {
+          const mappedStores: KiranaStore[] = storesData.map(s => ({
+            id: s.id,
+            name: s.name,
+            ownerName: s.owner_name,
+            phone: s.phone,
+            address: s.address,
+            lat: Number(s.lat),
+            lng: Number(s.lng),
+            radiusKm: Number(s.radius_km),
+            rating: Number(s.rating),
+            ordersCompleted: s.orders_completed,
+            isOpen: s.is_open,
+            khataAccepted: s.khata_accepted
+          }));
+          setStores(mappedStores);
+          setActiveStore(mappedStores[0]);
+        }
+
         const { data: prodsData, error: prodsErr } = await supabase.from('products').select('*');
         if (prodsErr) console.error('Supabase products error:', prodsErr);
         if (prodsData) {
@@ -538,6 +578,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         geofenceResults,
         activeStore,
         setActiveStore,
+        updateStoreProfile,
         products,
         updateProductStock,
         cart,

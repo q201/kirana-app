@@ -39,9 +39,28 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({
   onOpenReceipt,
   onOpenDeliveryAssignment
 }) => {
-  const { orders, updateOrderStatus, khata, activeStore, deliveryBoys, products, updateProductStock } = useApp();
+  const { orders, updateOrderStatus, khata, activeStore, updateStoreProfile, deliveryBoys, products, updateProductStock } = useApp();
   const [activeTab, setActiveTab] = useState<'pending' | 'active' | 'inventory' | 'khata_books'>('pending');
   const [inventoryFilter, setInventoryFilter] = useState<'all' | 'low_stock'>('all');
+
+  // Store Profile Edit Modal State
+  const [isEditStoreOpen, setIsEditStoreOpen] = useState<boolean>(false);
+  const [storeName, setStoreName] = useState<string>(activeStore.name);
+  const [ownerName, setOwnerName] = useState<string>(activeStore.ownerName);
+  const [phone, setPhone] = useState<string>(activeStore.phone);
+  const [address, setAddress] = useState<string>(activeStore.address);
+
+  const handleSaveStoreProfile = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateStoreProfile({
+      name: storeName,
+      ownerName,
+      phone,
+      address
+    });
+    setIsEditStoreOpen(false);
+    confetti({ particleCount: 50, spread: 60 });
+  };
 
   const [isPoModalOpen, setIsPoModalOpen] = useState<boolean>(false);
   const [poSentSuccess, setPoSentSuccess] = useState<boolean>(false);
@@ -73,9 +92,17 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({
             <Store className="w-8 h-8 font-black" />
             <h2 className="text-2xl font-black tracking-tight">{activeStore.name}</h2>
           </div>
-          <p className="text-sm font-bold text-slate-900">
-            Dukaan Owner: <span className="underline">{activeStore.ownerName}</span> ({activeStore.phone})
-          </p>
+          <div className="flex items-center gap-3">
+            <p className="text-sm font-bold text-slate-900">
+              Dukaan Owner: <span className="underline">{activeStore.ownerName}</span> ({activeStore.phone})
+            </p>
+            <button
+              onClick={() => setIsEditStoreOpen(true)}
+              className="px-2.5 py-1 bg-slate-950 text-amber-400 font-bold text-[11px] rounded-lg hover:bg-slate-900 border border-amber-400/50 shadow"
+            >
+              ✏️ Edit Store Profile (Supabase DB)
+            </button>
+          </div>
         </div>
 
         {/* Quick Stats Grid */}
@@ -512,6 +539,80 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Edit Store Profile Modal */}
+      {isEditStoreOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 text-slate-100 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <Store className="w-5 h-5 text-amber-400" />
+                <h3 className="font-black text-white text-base">Edit Kirana Store Profile</h3>
+              </div>
+              <button onClick={() => setIsEditStoreOpen(false)} className="p-1 text-slate-400 hover:text-white">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveStoreProfile} className="space-y-3 text-xs">
+              <div>
+                <label className="block text-slate-300 font-bold mb-1">Store / Dukaan Name</label>
+                <input
+                  type="text"
+                  required
+                  value={storeName}
+                  onChange={e => setStoreName(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-bold mb-1">Owner Name</label>
+                <input
+                  type="text"
+                  required
+                  value={ownerName}
+                  onChange={e => setOwnerName(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-bold mb-1">Mobile Phone</label>
+                <input
+                  type="text"
+                  required
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-bold mb-1">Dukaan Address</label>
+                <input
+                  type="text"
+                  required
+                  value={address}
+                  onChange={e => setAddress(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-medium"
+                />
+              </div>
+
+              <div className="p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-[11px] text-amber-300">
+                ⚡ Saves changes live directly into Supabase `stores` PostgreSQL database table!
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl text-xs transition-transform hover:scale-105"
+              >
+                Save Store Profile to Supabase DB
+              </button>
+            </form>
+          </div>
         </div>
       )}
     </div>
