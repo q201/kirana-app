@@ -72,11 +72,24 @@ CREATE TABLE IF NOT EXISTS public.khata_entries (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 5. Create Customers / Homemakers Profile Table
+CREATE TABLE IF NOT EXISTS public.customers (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  phone TEXT NOT NULL UNIQUE,
+  email TEXT,
+  address TEXT NOT NULL,
+  house_no TEXT NOT NULL,
+  password_hash TEXT NOT NULL DEFAULT 'pass123',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Enable Row Level Security (RLS)
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.stores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.khata_entries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.customers ENABLE ROW LEVEL SECURITY;
 
 -- Create Policies for Public Access Demo
 DO $$
@@ -96,7 +109,16 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public Read/Write Khata Entries') THEN
     CREATE POLICY "Public Read/Write Khata Entries" ON public.khata_entries FOR ALL USING (true);
   END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public Read/Write Customers') THEN
+    CREATE POLICY "Public Read/Write Customers" ON public.customers FOR ALL USING (true);
+  END IF;
 END $$;
+
+-- Seed Default Customer Account
+INSERT INTO public.customers (id, name, phone, email, address, house_no, password_hash)
+VALUES ('cust_42', 'Sunita Sharma', '+91 99887 76655', 'sunita@gmail.com', 'Pocket B, Sarita Vihar, New Delhi', 'House #42, Lane 3', 'pass123')
+ON CONFLICT (phone) DO NOTHING;
 
 -- Seed Initial Stores & Products
 INSERT INTO public.stores (id, name, owner_name, phone, address, lat, lng, radius_km, rating, orders_completed, is_open, khata_accepted)

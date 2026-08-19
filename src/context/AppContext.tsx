@@ -24,6 +24,7 @@ import { idempotencyEngine } from '../utils/idempotency';
 import { routeUserToStores, type GeofenceResult } from '../utils/geofence';
 
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { getStoredCustomerSession, saveCustomerSession } from '../lib/supabaseAuth';
 
 interface AppContextType {
   viewMode: ViewMode;
@@ -101,12 +102,36 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [userLat, setUserLat] = useState<number>(28.5292);
   const [userLng, setUserLng] = useState<number>(77.2910);
 
-  const [userProfile, setUserProfile] = useState<{ name: string; phone: string; address: string; houseNo: string }>({
-    name: 'Sunita Sharma',
-    phone: '+91 99887 76655',
-    address: 'Pocket B, Sarita Vihar, New Delhi',
-    houseNo: 'House #42, Lane 3'
-  });
+  const [userProfile, setUserProfileState] = useState<{ name: string; phone: string; address: string; houseNo: string }>(
+    () => {
+      const stored = getStoredCustomerSession();
+      if (stored) {
+        return {
+          name: stored.name,
+          phone: stored.phone,
+          address: stored.address,
+          houseNo: stored.houseNo
+        };
+      }
+      return {
+        name: 'Sunita Sharma',
+        phone: '+91 99887 76655',
+        address: 'Pocket B, Sarita Vihar, New Delhi',
+        houseNo: 'House #42, Lane 3'
+      };
+    }
+  );
+
+  const setUserProfile = (profile: { name: string; phone: string; address: string; houseNo: string }) => {
+    setUserProfileState(profile);
+    saveCustomerSession({
+      id: 'cust_' + Math.random().toString(36).substring(2, 8),
+      name: profile.name,
+      phone: profile.phone,
+      address: profile.address,
+      houseNo: profile.houseNo
+    });
+  };
   
   const [products, setProducts] = useState<Product[]>(isSupabaseConfigured() ? [] : INITIAL_PRODUCTS);
   const [cart, setCart] = useState<CartItem[]>([]);
