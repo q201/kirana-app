@@ -498,49 +498,12 @@ export const MOCK_STORES: KiranaStore[] = [
 
 export const INITIAL_KHATA_LEDGER: KhataLedger = {
   customerId: 'cust-101',
-  customerName: 'Sunita Sharma (House #42)',
+  customerName: 'Mohalla Household',
   customerPhone: '+91 99887 76655',
-  totalBalance: 1145,
+  totalBalance: 0,
   creditLimit: 5000,
   lastPaymentDate: '2026-08-01',
-  entries: [
-    {
-      id: 'kh-1',
-      date: '2026-08-02',
-      description: 'Groceries: Wheat Atta (5kg) & Mustard Oil (1L)',
-      amount: 330,
-      type: 'debit',
-      balanceAfter: 330,
-      itemsSummary: 'Wheat Atta (5kg), Mustard Oil (1L)'
-    },
-    {
-      id: 'kh-2',
-      date: '2026-08-07',
-      description: 'Groceries: Basmati Rice & Sugar',
-      amount: 262,
-      type: 'debit',
-      balanceAfter: 592,
-      itemsSummary: 'Basmati Rice (2kg), Sugar (1kg)'
-    },
-    {
-      id: 'kh-3',
-      date: '2026-08-12',
-      description: 'Groceries: Toor Dal & Tea Leaves',
-      amount: 475,
-      type: 'debit',
-      balanceAfter: 1067,
-      itemsSummary: 'Toor Dal (1kg), Tea Leaves (1kg)'
-    },
-    {
-      id: 'kh-4',
-      date: '2026-08-17',
-      description: 'Voice Note Order: Washing Powder & Soap',
-      amount: 78,
-      type: 'debit',
-      balanceAfter: 1145,
-      itemsSummary: 'Washing Powder (0.5kg), Bath Soap (1 pc)'
-    }
-  ]
+  entries: []
 };
 
 export const INITIAL_SUBSCRIPTIONS: Subscription[] = [
@@ -600,7 +563,7 @@ export const INITIAL_ORDERS: Order[] = [
   {
     id: 'ORD-9841',
     idempotencyKey: 'idemp_key_initial_01',
-    customerName: 'Sunita Sharma',
+    customerName: 'Homemaker Customer',
     customerPhone: '+91 99887 76655',
     address: 'House #42, Lane 3, Pocket B, Sarita Vihar',
     items: [

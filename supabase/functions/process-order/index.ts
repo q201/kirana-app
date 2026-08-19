@@ -45,9 +45,9 @@ serve(async (req) => {
     const newOrder = {
       id: orderId,
       idempotency_key: idempotencyKey,
-      customer_name: customerName || 'Sunita Sharma',
-      customer_phone: customerPhone || '+91 99887 76655',
-      address: address || 'House #42, Lane 3, Pocket B, Sarita Vihar',
+      customer_name: customerName || 'Homemaker Customer',
+      customer_phone: customerPhone || '+91 90000 00000',
+      address: address || 'Mohalla Neighborhood Address',
       items,
       total_amount: totalAmount,
       payment_method: paymentMethod || 'khata',
@@ -71,9 +71,9 @@ serve(async (req) => {
     if (paymentMethod === 'khata') {
       await supabaseClient.from('khata_entries').insert([{
         id: 'kh-' + Date.now(),
-        customer_id: 'cust_42',
-        customer_name: customerName || 'Sunita Sharma',
-        customer_phone: customerPhone || '+91 99887 76655',
+        customer_id: 'cust_user',
+        customer_name: customerName || 'Homemaker Customer',
+        customer_phone: customerPhone || '+91 90000 00000',
         order_id: orderId,
         date: new Date().toISOString().split('T')[0],
         description: `${(orderType || 'standard').replace('_', ' ').toUpperCase()} Order (${orderId})`,

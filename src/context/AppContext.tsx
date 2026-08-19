@@ -114,10 +114,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         };
       }
       return {
-        name: 'Sunita Sharma',
-        phone: '+91 99887 76655',
-        address: 'Pocket B, Sarita Vihar, New Delhi',
-        houseNo: 'House #42, Lane 3'
+        name: 'Guest Homemaker',
+        phone: '',
+        address: '',
+        houseNo: ''
       };
     }
   );
@@ -142,9 +142,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [khata, setKhata] = useState<KhataLedger>(
     isSupabaseConfigured()
       ? {
-          customerId: 'cust_42',
-          customerName: 'Sunita Sharma',
-          customerPhone: '+91 99887 76655',
+          customerId: 'cust_user',
+          customerName: userProfile?.name || 'Customer Account',
+          customerPhone: userProfile?.phone || '',
           creditLimit: 5000,
           totalBalance: 0,
           entries: []

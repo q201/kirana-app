@@ -195,10 +195,14 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 onClick={onOpenAuthModal}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 rounded-lg font-bold text-xs shadow transition-colors"
-                title="Manage Customer Profile & Address"
+                title="Customer Auth & Profile"
               >
                 <User className="w-4 h-4 text-amber-400" />
-                <span className="hidden md:inline">{userProfile.name}</span>
+                <span className="hidden md:inline">
+                  {!userProfile?.name || userProfile?.name === 'Guest Homemaker'
+                    ? (languageMode === 'hi' ? 'लॉगिन / साइन अप' : 'Sign In / Register')
+                    : userProfile.name}
+                </span>
               </button>
 
               <div className="hidden sm:flex items-center gap-2 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">

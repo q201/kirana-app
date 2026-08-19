@@ -87,7 +87,7 @@ export const CartAndCheckoutModal: React.FC<CartModalProps> = ({ isOpen, onClose
               </div>
               {successOrder.paymentMethod === 'khata' && (
                 <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-300 text-[11px] font-semibold">
-                  ✓ Added ₹{successOrder.totalAmount} to Sunita Sharma Khata Ledger.
+                  ✓ Added ₹{successOrder.totalAmount} to {userProfile?.name || 'Customer'} Khata Ledger.
                 </div>
               )}
             </div>

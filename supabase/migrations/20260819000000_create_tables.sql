@@ -59,20 +59,19 @@ CREATE TABLE IF NOT EXISTS public.orders (
 -- 4. Create Digital Khata Ledger Table
 CREATE TABLE IF NOT EXISTS public.khata_entries (
   id TEXT PRIMARY KEY,
-  customer_id TEXT NOT NULL DEFAULT 'cust_42',
-  customer_name TEXT NOT NULL DEFAULT 'Sunita Sharma',
-  customer_phone TEXT NOT NULL DEFAULT '+91 99887 76655',
+  customer_id TEXT NOT NULL,
+  customer_name TEXT NOT NULL,
+  customer_phone TEXT NOT NULL,
   order_id TEXT,
   date DATE NOT NULL DEFAULT CURRENT_DATE,
   description TEXT NOT NULL,
   amount NUMERIC(10, 2) NOT NULL,
   type TEXT NOT NULL,
-  balance_after NUMERIC(10, 2) NOT NULL,
   items_summary TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 5. Create Customers / Homemakers Profile Table
+-- 5. Create Customers Profile Table
 CREATE TABLE IF NOT EXISTS public.customers (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
@@ -91,7 +90,7 @@ ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.khata_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.customers ENABLE ROW LEVEL SECURITY;
 
--- Create Policies for Public Access Demo
+-- Create Policies for Public Access
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public Read/Write Products') THEN
@@ -114,11 +113,6 @@ BEGIN
     CREATE POLICY "Public Read/Write Customers" ON public.customers FOR ALL USING (true);
   END IF;
 END $$;
-
--- Seed Default Customer Account
-INSERT INTO public.customers (id, name, phone, email, address, house_no, password_hash)
-VALUES ('cust_42', 'Sunita Sharma', '+91 99887 76655', 'sunita@gmail.com', 'Pocket B, Sarita Vihar, New Delhi', 'House #42, Lane 3', 'pass123')
-ON CONFLICT (phone) DO NOTHING;
 
 -- Seed Initial Stores & Products
 INSERT INTO public.stores (id, name, owner_name, phone, address, lat, lng, radius_km, rating, orders_completed, is_open, khata_accepted)

@@ -22,15 +22,15 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Form Fields
-  const [phoneOrEmail, setPhoneOrEmail] = useState<string>(userProfile?.phone || '+91 99887 76655');
-  const [password, setPassword] = useState<string>('pass123');
+  const [phoneOrEmail, setPhoneOrEmail] = useState<string>(userProfile?.phone || '');
+  const [password, setPassword] = useState<string>('');
 
   // Sign Up Fields
-  const [name, setName] = useState<string>(userProfile?.name || 'Sunita Sharma');
-  const [phone, setPhone] = useState<string>(userProfile?.phone || '+91 99887 76655');
-  const [email, setEmail] = useState<string>('sunita@gmail.com');
-  const [address, setAddress] = useState<string>(userProfile?.address || 'Pocket B, Sarita Vihar, New Delhi');
-  const [houseNo, setHouseNo] = useState<string>(userProfile?.houseNo || 'House #42, Lane 3');
+  const [name, setName] = useState<string>(userProfile?.name === 'Guest Homemaker' ? '' : userProfile?.name || '');
+  const [phone, setPhone] = useState<string>(userProfile?.phone || '');
+  const [email, setEmail] = useState<string>('');
+  const [address, setAddress] = useState<string>(userProfile?.address || '');
+  const [houseNo, setHouseNo] = useState<string>(userProfile?.houseNo || '');
 
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
 
@@ -229,7 +229,7 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Sunita Sharma"
+                placeholder="e.g. Anjali Verma"
                 className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-medium focus:outline-none focus:border-amber-500"
               />
             </div>
@@ -245,7 +245,7 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({
                   required
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+91 99887 76655"
+                  placeholder="+91 98765 43210"
                   className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-medium focus:outline-none focus:border-amber-500"
                 />
               </div>
@@ -259,7 +259,7 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="sunita@gmail.com"
+                  placeholder="name@example.com"
                   className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-medium focus:outline-none focus:border-amber-500"
                 />
               </div>
