@@ -25,14 +25,16 @@ interface VoiceOrderModalProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenCartModal: () => void;
+  onRequireAuth: () => void;
 }
 
 export const VoiceOrderModal: React.FC<VoiceOrderModalProps> = ({
   isOpen,
   onClose,
-  onOpenCartModal
+  onOpenCartModal,
+  onRequireAuth
 }) => {
-  const { addToCart, placeOrder, activeStore } = useApp();
+  const { addToCart, placeOrder, activeStore, userProfile } = useApp();
 
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [transcript, setTranscript] = useState<string>('');
@@ -225,6 +227,11 @@ export const VoiceOrderModal: React.FC<VoiceOrderModalProps> = ({
 
   const handleDirectSendToKiranaUncle = () => {
     if (parsedItems.length === 0) return;
+    if (!userProfile?.phone || userProfile?.name === 'Guest Homemaker') {
+      onClose();
+      onRequireAuth();
+      return;
+    }
     parsedItems.forEach(item => {
       addToCart(item.product, item.quantity);
     });

@@ -145,17 +145,20 @@ const MainContent: React.FC = () => {
         isOpen={isVoiceModalOpen}
         onClose={() => setIsVoiceModalOpen(false)}
         onOpenCartModal={() => setIsCartModalOpen(true)}
+        onRequireAuth={() => setIsAuthModalOpen(true)}
       />
 
       <PhotoOrderModal
         isOpen={isPhotoModalOpen}
         onClose={() => setIsPhotoModalOpen(false)}
         onOpenCartModal={() => setIsCartModalOpen(true)}
+        onRequireAuth={() => setIsAuthModalOpen(true)}
       />
 
       <CartAndCheckoutModal
         isOpen={isCartModalOpen}
         onClose={() => setIsCartModalOpen(false)}
+        onRequireAuth={() => setIsAuthModalOpen(true)}
       />
 
       <ThermalReceiptModal

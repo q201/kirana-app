@@ -28,14 +28,16 @@ interface PhotoOrderModalProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenCartModal: () => void;
+  onRequireAuth: () => void;
 }
 
 export const PhotoOrderModal: React.FC<PhotoOrderModalProps> = ({
   isOpen,
   onClose,
-  onOpenCartModal
+  onOpenCartModal,
+  onRequireAuth
 }) => {
-  const { addToCart, placeOrder, activeStore } = useApp();
+  const { addToCart, placeOrder, activeStore, userProfile } = useApp();
 
   const [selectedListIndex, setSelectedListIndex] = useState<number>(0);
   const [customImageUrl, setCustomImageUrl] = useState<string>(SAMPLE_HANDWRITTEN_LISTS[0].imagePreview);
@@ -215,6 +217,11 @@ export const PhotoOrderModal: React.FC<PhotoOrderModalProps> = ({
 
   const handleDirectSendPhotoOrder = () => {
     if (parsedItems.length === 0) return;
+    if (!userProfile?.phone || userProfile?.name === 'Guest Homemaker') {
+      onClose();
+      onRequireAuth();
+      return;
+    }
     parsedItems.forEach(item => {
       addToCart(item.product, item.quantity);
     });

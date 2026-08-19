@@ -6,9 +6,10 @@ import confetti from 'canvas-confetti';
 interface CartModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onRequireAuth: () => void;
 }
 
-export const CartAndCheckoutModal: React.FC<CartModalProps> = ({ isOpen, onClose }) => {
+export const CartAndCheckoutModal: React.FC<CartModalProps> = ({ isOpen, onClose, onRequireAuth }) => {
   const {
     cart,
     updateCartQuantity,
@@ -30,6 +31,13 @@ export const CartAndCheckoutModal: React.FC<CartModalProps> = ({ isOpen, onClose
   if (!isOpen) return null;
 
   const handlePlaceOrderSubmit = () => {
+    // Check if user is logged in
+    if (!userProfile?.phone || userProfile?.name === 'Guest Homemaker') {
+      onClose();
+      onRequireAuth();
+      return;
+    }
+
     setOrderError(null);
     setIsSubmitting(true);
 
