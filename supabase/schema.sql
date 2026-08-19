@@ -72,17 +72,31 @@ CREATE TABLE IF NOT EXISTS public.khata_entries (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 5. Create Customers Profile Table
+CREATE TABLE IF NOT EXISTS public.customers (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  phone TEXT NOT NULL UNIQUE,
+  email TEXT,
+  address TEXT NOT NULL,
+  house_no TEXT NOT NULL,
+  password_hash TEXT NOT NULL DEFAULT 'pass123',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Enable Row Level Security (RLS)
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.stores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.khata_entries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.customers ENABLE ROW LEVEL SECURITY;
 
 -- Create Policies for Public Access Demo
 CREATE POLICY "Public Read/Write Products" ON public.products FOR ALL USING (true);
 CREATE POLICY "Public Read/Write Stores" ON public.stores FOR ALL USING (true);
 CREATE POLICY "Public Read/Write Orders" ON public.orders FOR ALL USING (true);
 CREATE POLICY "Public Read/Write Khata Entries" ON public.khata_entries FOR ALL USING (true);
+CREATE POLICY "Public Read/Write Customers" ON public.customers FOR ALL USING (true);
 
 -- ======================================================================
 -- SEED DATA - STORES & PRODUCTS

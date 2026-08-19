@@ -130,7 +130,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       name: profile.name,
       phone: profile.phone,
       address: profile.address,
-      houseNo: profile.houseNo
+      houseNo: profile.houseNo,
+      role: 'customer'
     });
   };
   

@@ -7,6 +7,7 @@ export interface CustomerUser {
   email?: string;
   address: string;
   houseNo: string;
+  role: 'customer' | 'store_owner' | 'admin';
 }
 
 const STORAGE_KEY = 'mohalla_active_customer_session';
@@ -27,44 +28,50 @@ export const saveCustomerSession = (customer: CustomerUser) => {
 
 export const clearCustomerSession = () => {
   localStorage.removeItem(STORAGE_KEY);
+  supabase.auth.signOut().catch(() => {});
 };
 
-// Sign In Customer (Lookup in Supabase customers table)
+/**
+ * Sign In using Supabase Native Auth (auth.users schema)
+ */
 export const signInCustomer = async (
   phoneOrEmail: string,
   pass: string
 ): Promise<{ success: boolean; customer?: CustomerUser; error?: string }> => {
   try {
-    const isEmail = phoneOrEmail.includes('@');
+    const cleanInput = phoneOrEmail.trim();
+    const formattedEmail = cleanInput.includes('@')
+      ? cleanInput.toLowerCase()
+      : `${cleanInput.replace(/[^0-9]/g, '')}@mohallakirana.local`;
 
-    const query = supabase.from('customers').select('*');
-    const { data, error } = isEmail
-      ? await query.eq('email', phoneOrEmail.trim().toLowerCase()).maybeSingle()
-      : await query.eq('phone', phoneOrEmail.trim()).maybeSingle();
+    // 1. Authenticate with Supabase Auth Engine (auth.users)
+    const { data: authData, error: authErr } = await supabase.auth.signInWithPassword({
+      email: formattedEmail,
+      password: pass
+    });
 
-    if (error) {
-      return { success: false, error: `Supabase Auth Error: ${error.message}` };
+    if (authErr || !authData?.user) {
+      // Check if user is not found in auth.users
+      if (authErr?.message.includes('Invalid login credentials') || authErr?.message.includes('Email not confirmed')) {
+        return {
+          success: false,
+          error: 'User not found in Supabase auth.users! Please click "Sign Up" tab to register.'
+        };
+      }
+      return { success: false, error: authErr?.message || 'Supabase Auth login failed' };
     }
 
-    if (!data) {
-      return {
-        success: false,
-        error: 'Customer account not found in Supabase database! Please click "Sign Up" to register your account.'
-      };
-    }
-
-    // Match password / pin (simple demo check)
-    if (data.password_hash && data.password_hash !== pass && pass !== 'pass123') {
-      return { success: false, error: 'Incorrect PIN/Password! Please try again.' };
-    }
+    const user = authData.user;
+    const meta = user.user_metadata || {};
 
     const customer: CustomerUser = {
-      id: data.id,
-      name: data.name,
-      phone: data.phone,
-      email: data.email,
-      address: data.address,
-      houseNo: data.house_no
+      id: user.id,
+      name: meta.name || user.email?.split('@')[0] || 'Customer Account',
+      phone: meta.phone || cleanInput,
+      email: user.email,
+      address: meta.address || 'Sarita Vihar, Pocket B',
+      houseNo: meta.house_no || 'House #42',
+      role: meta.role || 'customer'
     };
 
     saveCustomerSession(customer);
@@ -74,67 +81,56 @@ export const signInCustomer = async (
   }
 };
 
-// Sign Up Customer (Insert into Supabase customers table)
+/**
+ * Sign Up using Supabase Native Auth (auth.users schema with user_metadata)
+ */
 export const signUpCustomer = async (
   name: string,
   phone: string,
   email: string,
   houseNo: string,
   address: string,
-  pass: string = 'pass123'
+  pass: string = 'pass123',
+  role: 'customer' | 'store_owner' | 'admin' = 'customer'
 ): Promise<{ success: boolean; customer?: CustomerUser; error?: string }> => {
   try {
     const cleanPhone = phone.trim();
-    const cleanEmail = email.trim().toLowerCase();
+    const cleanEmail = email.trim()
+      ? email.trim().toLowerCase()
+      : `${cleanPhone.replace(/[^0-9]/g, '')}@mohallakirana.local`;
 
-    // Check if phone already registered in Supabase
-    const { data: existing } = await supabase
-      .from('customers')
-      .select('*')
-      .eq('phone', cleanPhone)
-      .maybeSingle();
+    // 1. Create User in Supabase Auth (auth.users table)
+    const { data: authData, error: authErr } = await supabase.auth.signUp({
+      email: cleanEmail,
+      password: pass,
+      options: {
+        data: {
+          name,
+          phone: cleanPhone,
+          house_no: houseNo,
+          address,
+          role
+        }
+      }
+    });
 
-    if (existing) {
-      const customer: CustomerUser = {
-        id: existing.id,
-        name: existing.name,
-        phone: existing.phone,
-        email: existing.email,
-        address: existing.address,
-        houseNo: existing.house_no
-      };
-      saveCustomerSession(customer);
-      return {
-        success: true,
-        customer,
-        error: 'Account already existed in database. Logged in successfully!'
-      };
+    if (authErr) {
+      // If user already registered in auth.users, try signing in!
+      if (authErr.message.includes('already registered')) {
+        return signInCustomer(cleanEmail, pass);
+      }
+      return { success: false, error: `Supabase Auth Sign Up Error: ${authErr.message}` };
     }
 
-    const id = 'cust_' + Math.random().toString(36).substring(2, 9);
-    const newCustomer = {
-      id,
-      name,
-      phone: cleanPhone,
-      email: cleanEmail || null,
-      address,
-      house_no: houseNo,
-      password_hash: pass
-    };
-
-    const { error: insertErr } = await supabase.from('customers').insert([newCustomer]);
-
-    if (insertErr) {
-      return { success: false, error: `Failed to insert customer to Supabase: ${insertErr.message}` };
-    }
-
+    const user = authData.user;
     const customer: CustomerUser = {
-      id,
+      id: user?.id || 'usr_' + Math.random().toString(36).substring(2, 9),
       name,
       phone: cleanPhone,
       email: cleanEmail,
       address,
-      houseNo
+      houseNo,
+      role
     };
 
     saveCustomerSession(customer);
