@@ -1,19 +1,21 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import { ShoppingBag, Mic, BookOpen, Store, Server, MapPin, Sparkles, Navigation } from 'lucide-react';
+import { ShoppingBag, Mic, BookOpen, Store, Server, MapPin, Sparkles, Navigation, User } from 'lucide-react';
 
 interface NavbarProps {
   onOpenVoiceModal: () => void;
   onOpenPhotoModal: () => void;
   onOpenCartModal: () => void;
   onOpenTrackingModal: () => void;
+  onOpenAuthModal: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   onOpenVoiceModal,
   onOpenPhotoModal,
   onOpenCartModal,
-  onOpenTrackingModal
+  onOpenTrackingModal,
+  onOpenAuthModal
 }) => {
   const {
     viewMode,
@@ -25,7 +27,8 @@ export const Navbar: React.FC<NavbarProps> = ({
     geofenceResults,
     activeStore,
     setActiveStore,
-    isSupabaseConnected
+    isSupabaseConnected,
+    userProfile
   } = useApp();
 
   const totalCartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -187,6 +190,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span className="hidden sm:inline">
                   {languageMode === 'hi' ? 'लाइव ट्रैकिंग' : 'Live Delivery GPS'}
                 </span>
+              </button>
+
+              <button
+                onClick={onOpenAuthModal}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 rounded-lg font-bold text-xs shadow transition-colors"
+                title="Manage Customer Profile & Address"
+              >
+                <User className="w-4 h-4 text-amber-400" />
+                <span className="hidden md:inline">{userProfile.name}</span>
               </button>
 
               <div className="hidden sm:flex items-center gap-2 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">

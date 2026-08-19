@@ -12,6 +12,7 @@ import { ThermalReceiptModal } from './components/storeowner/ThermalReceiptModal
 import { DeliveryAssignmentModal } from './components/storeowner/DeliveryAssignmentModal';
 import { SystemArchitectureView } from './components/architecture/SystemArchitectureView';
 import { LiveDeliveryTrackingModal } from './components/household/LiveDeliveryTrackingModal';
+import { CustomerAuthModal } from './components/household/CustomerAuthModal';
 import { Order } from './types';
 import { Mic, Camera, BookOpen, RefreshCw, Sparkles, Store, ShieldCheck, ArrowRight, HeartHandshake, Navigation } from 'lucide-react';
 
@@ -22,6 +23,7 @@ const MainContent: React.FC = () => {
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState<boolean>(false);
   const [isCartModalOpen, setIsCartModalOpen] = useState<boolean>(false);
   const [isTrackingModalOpen, setIsTrackingModalOpen] = useState<boolean>(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [selectedReceiptOrder, setSelectedReceiptOrder] = useState<Order | null>(null);
   const [selectedAssignmentOrder, setSelectedAssignmentOrder] = useState<Order | null>(null);
 
@@ -35,6 +37,7 @@ const MainContent: React.FC = () => {
         onOpenPhotoModal={() => setIsPhotoModalOpen(true)}
         onOpenCartModal={() => setIsCartModalOpen(true)}
         onOpenTrackingModal={() => setIsTrackingModalOpen(true)}
+        onOpenAuthModal={() => setIsAuthModalOpen(true)}
       />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-6">
@@ -168,6 +171,11 @@ const MainContent: React.FC = () => {
       <LiveDeliveryTrackingModal
         isOpen={isTrackingModalOpen}
         onClose={() => setIsTrackingModalOpen(false)}
+      />
+
+      <CustomerAuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
       />
     </div>
   );
