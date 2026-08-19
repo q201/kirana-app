@@ -299,9 +299,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const result = idempotencyEngine.processOrderRequest(
       key,
       {
-        customerName: khata.customerName,
-        customerPhone: khata.customerPhone,
-        address: 'House #42, Lane 3, Pocket B, Sarita Vihar',
+        customerName: userProfile.name,
+        customerPhone: userProfile.phone,
+        address: `${userProfile.houseNo}, ${userProfile.address}`,
         items: orderItems,
         totalAmount: cartTotal,
         paymentMethod,
@@ -350,42 +350,44 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }));
         }
 
-        // Sync order to Supabase live DB if connected
-        if (isSupabaseConfigured()) {
-          supabase.from('orders').insert([{
-            id: result.order.id,
-            idempotency_key: result.order.idempotencyKey,
-            customer_name: result.order.customerName,
-            customer_phone: result.order.customerPhone,
-            address: result.order.address,
-            items: result.order.items,
-            total_amount: result.order.totalAmount,
-            payment_method: result.order.paymentMethod,
-            payment_status: result.order.paymentStatus,
-            status: result.order.status,
-            order_type: result.order.orderType,
-            assigned_delivery_boy: result.order.assignedDeliveryBoy
-          }]).then(({ error }) => {
-            if (error) console.error('Supabase Order Insert Error:', error);
-          });
-
-          if (paymentMethod === 'khata') {
-            supabase.from('khata_entries').insert([{
-              id: 'kh-' + Date.now(),
-              customer_id: 'cust_42',
-              customer_name: khata.customerName,
-              customer_phone: khata.customerPhone,
-              order_id: result.order.id,
-              date: new Date().toISOString().split('T')[0],
-              description: `${orderType.replace('_', ' ').toUpperCase()} Order (${result.order.id})`,
-              amount: result.order.totalAmount,
-              type: 'debit',
-              balance_after: khata.totalBalance + result.order.totalAmount,
-              items_summary: orderItems.map(i => `${i.productName} x${i.quantity}`).join(', ')
-            }]).then(({ error }) => {
-              if (error) console.error('Supabase Khata Entry Error:', error);
-            });
+        // Sync order to Supabase live DB
+        supabase.from('orders').insert([{
+          id: result.order.id,
+          idempotency_key: result.order.idempotencyKey,
+          customer_name: userProfile.name,
+          customer_phone: userProfile.phone,
+          address: `${userProfile.houseNo}, ${userProfile.address}`,
+          items: orderItems,
+          total_amount: result.order.totalAmount,
+          payment_method: paymentMethod,
+          payment_status: paymentMethod === 'khata' ? 'added_to_khata' : 'paid',
+          status: 'pending',
+          order_type: orderType,
+          assigned_delivery_boy: 'db-1'
+        }]).then(({ data, error }) => {
+          if (error) {
+            console.error('Supabase Order Insert Error:', error);
+          } else {
+            console.log('Successfully inserted order to Supabase live DB:', result.order!.id);
           }
+        });
+
+        if (paymentMethod === 'khata') {
+          supabase.from('khata_entries').insert([{
+            id: 'kh-' + Date.now(),
+            customer_id: 'cust_42',
+            customer_name: userProfile.name,
+            customer_phone: userProfile.phone,
+            order_id: result.order.id,
+            date: new Date().toISOString().split('T')[0],
+            description: `${orderType.replace('_', ' ').toUpperCase()} Order (${result.order.id})`,
+            amount: result.order.totalAmount,
+            type: 'debit',
+            balance_after: khata.totalBalance + result.order.totalAmount,
+            items_summary: orderItems.map(i => `${i.productName} x${i.quantity}`).join(', ')
+          }]).then(({ error }) => {
+            if (error) console.error('Supabase Khata Entry Error:', error);
+          });
         }
 
         clearCart();
