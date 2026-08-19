@@ -131,7 +131,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       phone: profile.phone,
       address: profile.address,
       houseNo: profile.houseNo,
-      role: 'customer'
+      roles: ['customer']
     });
   };
   

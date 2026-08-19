@@ -7,7 +7,7 @@ export interface CustomerUser {
   email?: string;
   address: string;
   houseNo: string;
-  role: 'customer' | 'store_owner' | 'admin';
+  roles: string[]; // Many-to-Many roles from user_roles join table
 }
 
 const STORAGE_KEY = 'mohalla_active_customer_session';
@@ -32,7 +32,53 @@ export const clearCustomerSession = () => {
 };
 
 /**
- * Sign In using Supabase Native Auth (auth.users schema)
+ * Fetch assigned roles from user_roles JOIN table (Many-to-Many RBAC)
+ */
+export const getUserRolesFromJoinTable = async (userId: string): Promise<string[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('role_id, roles(name)')
+      .eq('user_id', userId);
+
+    if (error || !data || data.length === 0) {
+      return ['customer'];
+    }
+
+    const assignedRoles: string[] = data.map((item: any) => item.roles?.name || item.role_id).filter(Boolean);
+    return assignedRoles.length > 0 ? assignedRoles : ['customer'];
+  } catch (err) {
+    console.error('Failed to query user_roles join table:', err);
+    return ['customer'];
+  }
+};
+
+/**
+ * Assign a Role to a User in user_roles JOIN table
+ */
+export const assignUserRoleJoin = async (userId: string, roleName: 'customer' | 'store_owner' | 'admin') => {
+  try {
+    const roleIdMap: Record<string, string> = {
+      customer: 'role_customer',
+      store_owner: 'role_store_owner',
+      admin: 'role_admin'
+    };
+
+    const roleId = roleIdMap[roleName] || 'role_customer';
+
+    await supabase.from('user_roles').insert([
+      {
+        user_id: userId,
+        role_id: roleId
+      }
+    ]);
+  } catch (err) {
+    console.error('Failed to assign user role in join table:', err);
+  }
+};
+
+/**
+ * Sign In using Supabase Native Auth & Many-to-Many JOIN Roles Table
  */
 export const signInCustomer = async (
   phoneOrEmail: string,
@@ -51,7 +97,6 @@ export const signInCustomer = async (
     });
 
     if (authErr || !authData?.user) {
-      // Check if user is not found in auth.users
       if (authErr?.message.includes('Invalid login credentials') || authErr?.message.includes('Email not confirmed')) {
         return {
           success: false,
@@ -64,6 +109,9 @@ export const signInCustomer = async (
     const user = authData.user;
     const meta = user.user_metadata || {};
 
+    // 2. Fetch assigned roles from Many-to-Many user_roles JOIN table
+    const assignedRoles = await getUserRolesFromJoinTable(user.id);
+
     const customer: CustomerUser = {
       id: user.id,
       name: meta.name || user.email?.split('@')[0] || 'Customer Account',
@@ -71,7 +119,7 @@ export const signInCustomer = async (
       email: user.email,
       address: meta.address || 'Sarita Vihar, Pocket B',
       houseNo: meta.house_no || 'House #42',
-      role: meta.role || 'customer'
+      roles: assignedRoles
     };
 
     saveCustomerSession(customer);
@@ -82,7 +130,7 @@ export const signInCustomer = async (
 };
 
 /**
- * Sign Up using Supabase Native Auth (auth.users schema with user_metadata)
+ * Sign Up using Supabase Native Auth & Assigning Roles in user_roles JOIN Table
  */
 export const signUpCustomer = async (
   name: string,
@@ -108,14 +156,12 @@ export const signUpCustomer = async (
           name,
           phone: cleanPhone,
           house_no: houseNo,
-          address,
-          role
+          address
         }
       }
     });
 
     if (authErr) {
-      // If user already registered in auth.users, try signing in!
       if (authErr.message.includes('already registered')) {
         return signInCustomer(cleanEmail, pass);
       }
@@ -123,14 +169,19 @@ export const signUpCustomer = async (
     }
 
     const user = authData.user;
+    const userId = user?.id || 'usr_' + Math.random().toString(36).substring(2, 9);
+
+    // 2. Assign role in Many-to-Many user_roles JOIN table
+    await assignUserRoleJoin(userId, role);
+
     const customer: CustomerUser = {
-      id: user?.id || 'usr_' + Math.random().toString(36).substring(2, 9),
+      id: userId,
       name,
       phone: cleanPhone,
       email: cleanEmail,
       address,
       houseNo,
-      role
+      roles: [role]
     };
 
     saveCustomerSession(customer);

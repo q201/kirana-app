@@ -83,12 +83,31 @@ CREATE TABLE IF NOT EXISTS public.customers (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 6. Create Roles Master Table
+CREATE TABLE IF NOT EXISTS public.roles (
+  id TEXT PRIMARY KEY,
+  name TEXT UNIQUE NOT NULL,
+  description TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 7. Create User Roles Join Table (Many-to-Many)
+CREATE TABLE IF NOT EXISTS public.user_roles (
+  user_id TEXT NOT NULL,
+  role_id TEXT NOT NULL,
+  assigned_at TIMESTAMPTZ DEFAULT NOW(),
+  PRIMARY KEY (user_id, role_id),
+  FOREIGN KEY (role_id) REFERENCES public.roles(id) ON DELETE CASCADE
+);
+
 -- Enable Row Level Security (RLS)
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.stores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.khata_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.customers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.roles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
 
 -- Create Policies for Public Access
 DO $$
@@ -112,7 +131,23 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public Read/Write Customers') THEN
     CREATE POLICY "Public Read/Write Customers" ON public.customers FOR ALL USING (true);
   END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public Read/Write Roles') THEN
+    CREATE POLICY "Public Read/Write Roles" ON public.roles FOR ALL USING (true);
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public Read/Write User Roles') THEN
+    CREATE POLICY "Public Read/Write User Roles" ON public.user_roles FOR ALL USING (true);
+  END IF;
 END $$;
+
+-- Seed Roles Master Data
+INSERT INTO public.roles (id, name, description)
+VALUES 
+  ('role_customer', 'customer', 'Homemaker ordering groceries & managing Digital Khata'),
+  ('role_store_owner', 'store_owner', 'Kirana Store Owner managing inventory & order fulfillment'),
+  ('role_admin', 'admin', 'Platform Administrator monitoring system architecture & network revenue')
+ON CONFLICT (id) DO NOTHING;
 
 -- Seed Initial Stores & Products
 INSERT INTO public.stores (id, name, owner_name, phone, address, lat, lng, radius_km, rating, orders_completed, is_open, khata_accepted)
