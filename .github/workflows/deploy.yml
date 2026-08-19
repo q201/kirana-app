@@ -65,13 +65,20 @@ jobs:
         with:
           version: latest
 
-      - name: Deploy Edge Functions to Supabase Project
+      - name: Deploy Database Migrations & Edge Functions to Supabase Project
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
         run: |
           if [ -n "$SUPABASE_ACCESS_TOKEN" ]; then
+            echo "Deploying Supabase Edge Functions..."
             supabase functions deploy process-order --project-ref txufqadysiifuwvejmxu --no-verify-jwt
             supabase functions deploy parse-voice-order --project-ref txufqadysiifuwvejmxu --no-verify-jwt
+            
+            if [ -n "$SUPABASE_DB_PASSWORD" ]; then
+              echo "Applying Supabase Database Migrations..."
+              supabase db push --project-ref txufqadysiifuwvejmxu --password "$SUPABASE_DB_PASSWORD" || true
+            fi
           else
-            echo "SUPABASE_ACCESS_TOKEN secret not set. Skipping Edge Functions deployment."
+            echo "SUPABASE_ACCESS_TOKEN secret not set. Skipping Supabase Edge Functions & DB migration deployment."
           fi
