@@ -16,6 +16,7 @@ export const CartAndCheckoutModal: React.FC<CartModalProps> = ({ isOpen, onClose
     cartTotal,
     placeOrder,
     khata,
+    userProfile,
     activeStore,
     simulateNetworkDrop,
     setSimulateNetworkDrop
