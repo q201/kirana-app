@@ -179,7 +179,7 @@ export const SystemArchitectureView: React.FC = () => {
                   🗺️ PostGIS (Geofence Polygons)
                 </div>
                 <div className="p-2 bg-slate-900 rounded-lg border border-slate-800 text-slate-300">
-                  ☁️ S3 / Supabase Media Store
+                  ☁️ Encrypted Cloud Media Vault
                 </div>
               </div>
             </div>

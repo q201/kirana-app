@@ -100,10 +100,10 @@ export const signInCustomer = async (
       if (authErr?.message.includes('Invalid login credentials') || authErr?.message.includes('Email not confirmed')) {
         return {
           success: false,
-          error: 'User not found in Supabase auth.users! Please click "Sign Up" tab to register.'
+          error: 'Account not registered yet! Please click the "Sign Up" tab to create your account.'
         };
       }
-      return { success: false, error: authErr?.message || 'Supabase Auth login failed' };
+      return { success: false, error: authErr?.message || 'Invalid credentials or sign in failed.' };
     }
 
     const user = authData.user;
@@ -165,7 +165,7 @@ export const signUpCustomer = async (
       if (authErr.message.includes('already registered')) {
         return signInCustomer(cleanEmail, pass);
       }
-      return { success: false, error: `Supabase Auth Sign Up Error: ${authErr.message}` };
+      return { success: false, error: `Account registration error: ${authErr.message}` };
     }
 
     const user = authData.user;

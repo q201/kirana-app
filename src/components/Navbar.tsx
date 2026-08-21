@@ -79,7 +79,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
         <div className="flex items-center gap-2">
           <span className="hidden sm:inline-block bg-slate-950/20 px-2 py-0.5 rounded text-[11px] font-semibold">
-            PostGIS Geofenced 1.5km Active
+            📍 Geofenced 1.5km Radius
           </span>
           <span
             className={`px-2 py-0.5 rounded text-[10px] font-black uppercase flex items-center gap-1 ${
@@ -88,7 +88,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 : 'bg-slate-950/30 text-slate-900'
             }`}
           >
-            {isSupabaseConnected ? '⚡ Supabase DB Active' : '💾 Local Mode'}
+            {isSupabaseConnected ? '🟢 Live Cloud Sync' : '🟢 Secure Offline Mode'}
           </span>
         </div>
       </div>
