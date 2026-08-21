@@ -1,13 +1,15 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import { ShoppingBag, Mic, BookOpen, Store, Server, MapPin, Sparkles, Navigation, User } from 'lucide-react';
+import { hasRole } from '../lib/supabaseAuth';
+import { ShoppingBag, Mic, BookOpen, Store, Server, MapPin, Sparkles, Navigation, User, Lock, LogOut, Shield, Palette } from 'lucide-react';
+import { ThemeMode } from '../types';
 
 interface NavbarProps {
   onOpenVoiceModal: () => void;
   onOpenPhotoModal: () => void;
   onOpenCartModal: () => void;
   onOpenTrackingModal: () => void;
-  onOpenAuthModal: () => void;
+  onOpenAuthModal: (targetRole?: 'customer' | 'store_owner' | 'admin') => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -22,16 +24,46 @@ export const Navbar: React.FC<NavbarProps> = ({
     setViewMode,
     languageMode,
     setLanguageMode,
+    themeMode,
+    setThemeMode,
     cart,
     khata,
     geofenceResults,
     activeStore,
     setActiveStore,
     isSupabaseConnected,
-    userProfile
+    userProfile,
+    logoutUser
   } = useApp();
 
   const totalCartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  const isStoreOwnerAuth = hasRole(userProfile?.roles, 'store_owner');
+  const isAdminAuth = hasRole(userProfile?.roles, 'admin');
+
+  const handleSwitchToStoreOwner = () => {
+    if (isStoreOwnerAuth) {
+      setViewMode('storeowner');
+    } else {
+      onOpenAuthModal('store_owner');
+    }
+  };
+
+  const handleSwitchToAdmin = () => {
+    if (isAdminAuth) {
+      setViewMode('architecture');
+    } else {
+      onOpenAuthModal('admin');
+    }
+  };
+
+  const activeRoleDisplay = userProfile.roles?.includes('admin')
+    ? 'Admin'
+    : userProfile.roles?.includes('store_owner')
+    ? 'Kirana Merchant'
+    : userProfile.phone
+    ? 'Customer'
+    : 'Guest Homemaker';
 
   return (
     <header className="sticky top-0 z-40 bg-slate-900 text-white shadow-xl border-b border-slate-800">
@@ -103,7 +135,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        {/* View Mode Switcher */}
+        {/* View Mode Switcher with RBAC Gating */}
         <div className="flex items-center bg-slate-800 p-1 rounded-xl border border-slate-700">
           <button
             onClick={() => setViewMode('homemaker')}
@@ -114,36 +146,68 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             <ShoppingBag className="w-3.5 h-3.5" />
-            <span>{languageMode === 'hi' ? 'गृहणी ऐप' : 'Homemaker App'}</span>
+            <span>{languageMode === 'hi' ? 'गृहणी ऐप (Public)' : 'Homemaker App'}</span>
           </button>
 
           <button
-            onClick={() => setViewMode('storeowner')}
+            onClick={handleSwitchToStoreOwner}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
               viewMode === 'storeowner'
                 ? 'bg-amber-500 text-slate-950 shadow'
                 : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
             }`}
+            title={isStoreOwnerAuth ? 'Access Store Owner Dashboard' : 'Requires Store Owner Login'}
           >
-            <Store className="w-3.5 h-3.5" />
+            <Store className="w-3.5 h-3.5 text-amber-400" />
             <span>{languageMode === 'hi' ? 'किराना अंकल डैशबोर्ड' : 'Kirana Uncle Dashboard'}</span>
+            {!isStoreOwnerAuth && <Lock className="w-3 h-3 text-amber-400 ml-0.5" />}
           </button>
 
-          <button
-            onClick={() => setViewMode('architecture')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-              viewMode === 'architecture'
-                ? 'bg-blue-600 text-white shadow'
-                : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
-            }`}
-          >
-            <Server className="w-3.5 h-3.5" />
-            <span>System Design</span>
-          </button>
+          {isAdminAuth ? (
+            <button
+              onClick={handleSwitchToAdmin}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                viewMode === 'architecture'
+                  ? 'bg-blue-600 text-white shadow'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+              }`}
+              title="Access Admin System Design"
+            >
+              <Server className="w-3.5 h-3.5 text-blue-400" />
+              <span>System Design</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => onOpenAuthModal('admin')}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-950/40 hover:bg-blue-900/60 text-blue-400 border border-blue-800/60 rounded-lg text-xs font-bold transition-all"
+              title="Log In as Platform Admin"
+            >
+              <Lock className="w-3.5 h-3.5" />
+              <span>Admin Login</span>
+            </button>
+          )}
         </div>
 
         {/* Language Switcher & Quick Actions */}
         <div className="flex items-center gap-2">
+          {/* Quick Theme Selector Dropdown */}
+          <div className="hidden sm:flex items-center bg-slate-800 px-2 py-1 rounded-xl border border-slate-700 text-xs">
+            <Palette className="w-3.5 h-3.5 text-purple-400 mr-1.5" />
+            <select
+              value={themeMode}
+              onChange={(e) => setThemeMode(e.target.value as ThemeMode)}
+              className="bg-transparent text-purple-300 font-semibold focus:outline-none cursor-pointer"
+              title="Admin & App Theme Selector"
+            >
+              <option value="dark" className="bg-slate-900 text-slate-100">🌙 Classic Dark</option>
+              <option value="light" className="bg-slate-900 text-slate-100">☀️ Clean Light</option>
+              <option value="emerald" className="bg-slate-900 text-slate-100">🍃 Emerald Grocer</option>
+              <option value="sapphire" className="bg-slate-900 text-slate-100">🌊 Midnight Sapphire</option>
+              <option value="sunset" className="bg-slate-900 text-slate-100">🔥 Sunset Ochre</option>
+              <option value="cyberpunk" className="bg-slate-900 text-slate-100">⚡ Cyberpunk Neon</option>
+            </select>
+          </div>
+
           {/* Hindi / English Language Toggle */}
           <div className="flex items-center bg-slate-800 p-1 rounded-xl border border-slate-700">
             <button
@@ -191,20 +255,36 @@ export const Navbar: React.FC<NavbarProps> = ({
                   {languageMode === 'hi' ? 'लाइव ट्रैकिंग' : 'Live Delivery GPS'}
                 </span>
               </button>
+            </div>
+          )}
 
+          {/* User Profile & Role Badge Button */}
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => onOpenAuthModal('customer')}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 rounded-lg font-bold text-xs shadow transition-colors"
+              title="Customer Auth & Profile"
+            >
+              <User className="w-4 h-4 text-amber-400" />
+              <div className="text-left hidden md:block">
+                <div className="leading-tight text-white font-extrabold">{userProfile.name}</div>
+                <div className="text-[10px] text-amber-400 leading-none font-bold uppercase">{activeRoleDisplay}</div>
+              </div>
+            </button>
+
+            {userProfile.phone && (
               <button
-                onClick={onOpenAuthModal}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 rounded-lg font-bold text-xs shadow transition-colors"
-                title="Customer Auth & Profile"
+                onClick={logoutUser}
+                className="p-1.5 bg-slate-800 hover:bg-red-900/40 text-slate-400 hover:text-red-300 border border-slate-700 hover:border-red-500/50 rounded-lg text-xs transition-colors"
+                title="Sign Out"
               >
-                <User className="w-4 h-4 text-amber-400" />
-                <span className="hidden md:inline">
-                  {!userProfile?.name || userProfile?.name === 'Guest Homemaker'
-                    ? (languageMode === 'hi' ? 'लॉगिन / साइन अप' : 'Sign In / Register')
-                    : userProfile.name}
-                </span>
+                <LogOut className="w-4 h-4" />
               </button>
+            )}
+          </div>
 
+          {viewMode === 'homemaker' && (
+            <div className="flex items-center gap-2">
               <div className="hidden sm:flex items-center gap-2 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
                 <BookOpen className="w-4 h-4 text-emerald-400" />
                 <div className="text-left text-[11px]">
@@ -233,3 +313,4 @@ export const Navbar: React.FC<NavbarProps> = ({
     </header>
   );
 };
+

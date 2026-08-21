@@ -1,23 +1,26 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { signInCustomer, signUpCustomer } from '../../lib/supabaseAuth';
-import { User, Phone, MapPin, Home, CheckCircle2, X, ShieldCheck, Sparkles, LogIn, UserPlus, KeyRound, AlertCircle, Mail } from 'lucide-react';
+import { User, Phone, MapPin, Home, CheckCircle2, X, ShieldCheck, Sparkles, LogIn, UserPlus, KeyRound, AlertCircle, Mail, Store, Shield } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 interface CustomerAuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  targetRole?: 'customer' | 'store_owner' | 'admin';
 }
 
 export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({
   isOpen,
   onClose,
-  onSuccess
+  onSuccess,
+  targetRole
 }) => {
-  const { userProfile, setUserProfile, languageMode } = useApp();
+  const { userProfile, setUserProfile, languageMode, setViewMode } = useApp();
 
   const [tab, setTab] = useState<'signin' | 'signup'>('signin');
+  const [selectedRole, setSelectedRole] = useState<'customer' | 'store_owner' | 'admin'>(targetRole || 'customer');
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -49,8 +52,13 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({
         name: res.customer.name,
         phone: res.customer.phone,
         address: res.customer.address,
-        houseNo: res.customer.houseNo
+        houseNo: res.customer.houseNo,
+        roles: res.customer.roles
       });
+
+      if (res.customer.roles.includes('store_owner')) setViewMode('storeowner');
+      else if (res.customer.roles.includes('admin')) setViewMode('architecture');
+
       setIsSuccess(true);
       confetti({ particleCount: 50, spread: 60 });
       setTimeout(() => {
@@ -68,7 +76,7 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({
     setLoading(true);
     setErrorMsg(null);
 
-    const res = await signUpCustomer(name, phone, email, houseNo, address, password);
+    const res = await signUpCustomer(name, phone, email, houseNo, address, password, selectedRole);
     setLoading(false);
 
     if (res.success && res.customer) {
@@ -76,8 +84,13 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({
         name: res.customer.name,
         phone: res.customer.phone,
         address: res.customer.address,
-        houseNo: res.customer.houseNo
+        houseNo: res.customer.houseNo,
+        roles: res.customer.roles
       });
+
+      if (selectedRole === 'store_owner') setViewMode('storeowner');
+      else if (selectedRole === 'admin') setViewMode('architecture');
+
       setIsSuccess(true);
       confetti({ particleCount: 60, spread: 70 });
       setTimeout(() => {
@@ -91,20 +104,26 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 text-slate-100 shadow-2xl relative space-y-4">
+    <div onClick={onClose} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in cursor-pointer">
+      <div onClick={(e) => e.stopPropagation()} className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 text-slate-100 shadow-2xl relative space-y-4 max-h-[90vh] overflow-y-auto cursor-default">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold">
-              <User className="w-4 h-4" />
+              {targetRole === 'store_owner' ? <Store className="w-4 h-4" /> : targetRole === 'admin' ? <Shield className="w-4 h-4" /> : <User className="w-4 h-4" />}
             </div>
             <div>
               <h3 className="text-base font-black text-white">
-                {languageMode === 'hi' ? 'मोहल्ला ग्राहक प्रमाणीकरण' : 'Supabase Customer Auth'}
+                {targetRole === 'store_owner'
+                  ? 'Kirana Merchant Login Required'
+                  : targetRole === 'admin'
+                  ? 'Platform Admin Login Required'
+                  : (languageMode === 'hi' ? 'मोहल्ला ग्राहक प्रमाणीकरण' : 'Supabase RBAC Auth')}
               </h3>
               <p className="text-[11px] text-slate-400">
-                {languageMode === 'hi' ? 'लाइव Supabase डेटाबेस से कनेक्टेड' : 'Live Supabase DB User System'}
+                {targetRole
+                  ? `Access restricted to ${targetRole.replace('_', ' ')} accounts`
+                  : (languageMode === 'hi' ? 'लाइव Supabase डेटाबेस से कनेक्टेड' : 'Live Supabase Role-Based System')}
               </p>
             </div>
           </div>
@@ -139,6 +158,7 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({
             <span>{languageMode === 'hi' ? 'साइन अप (Sign Up)' : 'Sign Up (New User)'}</span>
           </button>
         </div>
+
 
         {/* Error Alert */}
         {errorMsg && (
@@ -219,6 +239,22 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({
         ) : (
           /* Sign Up Form */
           <form onSubmit={handleSignUp} className="space-y-3 text-xs">
+            <div>
+              <label className="block text-slate-300 font-bold mb-1 flex items-center gap-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                <span>Account Role</span>
+              </label>
+              <select
+                value={selectedRole}
+                onChange={(e) => setSelectedRole(e.target.value as any)}
+                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-amber-300 font-bold focus:outline-none focus:border-amber-500"
+              >
+                <option value="customer">🛒 Household Customer (Homemaker App)</option>
+                <option value="store_owner">🏪 Kirana Merchant (Store Dashboard)</option>
+                <option value="admin">🛡️ Platform Admin (System Design)</option>
+              </select>
+            </div>
+
             <div>
               <label className="block text-slate-300 font-bold mb-1 flex items-center gap-1">
                 <User className="w-3.5 h-3.5 text-amber-400" />

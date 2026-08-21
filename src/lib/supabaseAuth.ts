@@ -190,3 +190,13 @@ export const signUpCustomer = async (
     return { success: false, error: err.message || 'Registration error' };
   }
 };
+
+/**
+ * Helper to verify role permission
+ */
+export const hasRole = (userRoles: string[] | undefined, targetRole: 'customer' | 'store_owner' | 'admin'): boolean => {
+  if (!userRoles || userRoles.length === 0) return false;
+  if (userRoles.includes('admin')) return true; // Admin has full system access
+  return userRoles.includes(targetRole);
+};
+

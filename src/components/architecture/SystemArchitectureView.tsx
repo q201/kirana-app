@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
-import { Server, Database, Zap, Cpu, Layers, ShieldCheck, Globe, MapPin, Radio, Bell } from 'lucide-react';
+import { Server, Database, Zap, Cpu, Layers, ShieldCheck, Globe, MapPin, Radio, Bell, Palette } from 'lucide-react';
 import { IdempotencySimulator } from './IdempotencySimulator';
 import { GeofenceSimulator } from './GeofenceSimulator';
+import { AdminThemeSelector } from './AdminThemeSelector';
+import { useApp } from '../../context/AppContext';
+import { ThemeMode } from '../../types';
 
 export const SystemArchitectureView: React.FC = () => {
-  const [activeSubTab, setActiveSubTab] = useState<'blueprint' | 'idempotency' | 'geofence'>('blueprint');
+  const [activeSubTab, setActiveSubTab] = useState<'blueprint' | 'idempotency' | 'geofence' | 'theme'>('blueprint');
+  const { themeMode, setThemeMode } = useApp();
 
   return (
     <div className="space-y-6">
@@ -23,7 +27,7 @@ export const SystemArchitectureView: React.FC = () => {
         </div>
 
         {/* Sub-tab Navigation */}
-        <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800">
+        <div className="flex flex-wrap items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
           <button
             onClick={() => setActiveSubTab('blueprint')}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
@@ -53,6 +57,17 @@ export const SystemArchitectureView: React.FC = () => {
             }`}
           >
             PostGIS Geofence Router
+          </button>
+          <button
+            onClick={() => setActiveSubTab('theme')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              activeSubTab === 'theme'
+                ? 'bg-purple-600 text-white shadow'
+                : 'text-purple-400 hover:text-white hover:bg-purple-950/40'
+            }`}
+          >
+            <Palette className="w-3.5 h-3.5" />
+            <span>Theme Selector</span>
           </button>
         </div>
       </div>
@@ -172,8 +187,10 @@ export const SystemArchitectureView: React.FC = () => {
         </div>
       ) : activeSubTab === 'idempotency' ? (
         <IdempotencySimulator />
-      ) : (
+      ) : activeSubTab === 'geofence' ? (
         <GeofenceSimulator />
+      ) : (
+        <AdminThemeSelector />
       )}
     </div>
   );

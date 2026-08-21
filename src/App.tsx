@@ -13,19 +13,26 @@ import { DeliveryAssignmentModal } from './components/storeowner/DeliveryAssignm
 import { SystemArchitectureView } from './components/architecture/SystemArchitectureView';
 import { LiveDeliveryTrackingModal } from './components/household/LiveDeliveryTrackingModal';
 import { CustomerAuthModal } from './components/household/CustomerAuthModal';
+import { hasRole } from './lib/supabaseAuth';
 import { Order } from './types';
 import { Mic, Camera, BookOpen, RefreshCw, Sparkles, Store, ShieldCheck, ArrowRight, HeartHandshake, Navigation } from 'lucide-react';
 
 const MainContent: React.FC = () => {
-  const { viewMode, setViewMode, activeStore, khata } = useApp();
+  const { viewMode, setViewMode, activeStore, khata, userProfile } = useApp();
 
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState<boolean>(false);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState<boolean>(false);
   const [isCartModalOpen, setIsCartModalOpen] = useState<boolean>(false);
   const [isTrackingModalOpen, setIsTrackingModalOpen] = useState<boolean>(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [authTargetRole, setAuthTargetRole] = useState<'customer' | 'store_owner' | 'admin' | undefined>(undefined);
   const [selectedReceiptOrder, setSelectedReceiptOrder] = useState<Order | null>(null);
   const [selectedAssignmentOrder, setSelectedAssignmentOrder] = useState<Order | null>(null);
+
+  const handleOpenAuthModal = (role?: 'customer' | 'store_owner' | 'admin') => {
+    setAuthTargetRole(role);
+    setIsAuthModalOpen(true);
+  };
 
   const [homemakerSection, setHomemakerSection] = useState<'catalog' | 'khata' | 'subscriptions'>('catalog');
 
@@ -37,7 +44,7 @@ const MainContent: React.FC = () => {
         onOpenPhotoModal={() => setIsPhotoModalOpen(true)}
         onOpenCartModal={() => setIsCartModalOpen(true)}
         onOpenTrackingModal={() => setIsTrackingModalOpen(true)}
-        onOpenAuthModal={() => setIsAuthModalOpen(true)}
+        onOpenAuthModal={handleOpenAuthModal}
       />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-6">
@@ -137,7 +144,36 @@ const MainContent: React.FC = () => {
         )}
 
         {/* Backend System Architecture & Simulators View */}
-        {viewMode === 'architecture' && <SystemArchitectureView />}
+        {viewMode === 'architecture' && (
+          hasRole(userProfile?.roles, 'admin') ? (
+            <SystemArchitectureView />
+          ) : (
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-xl mx-auto text-center space-y-4 my-8 shadow-2xl">
+              <div className="w-14 h-14 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center border border-blue-500/30 mx-auto">
+                <ShieldCheck className="w-7 h-7" />
+              </div>
+              <h2 className="text-xl font-black text-white">Platform Admin Authentication Required</h2>
+              <p className="text-xs text-slate-400">
+                You are attempting to access the System Architecture & Theme Manager (`/admin`). Please log in with a Platform Admin account.
+              </p>
+              <div className="pt-2 flex flex-wrap justify-center gap-3">
+                <button
+                  onClick={() => handleOpenAuthModal('admin')}
+                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs flex items-center gap-2 shadow-lg transition-all"
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>Log In as Platform Admin</span>
+                </button>
+                <button
+                  onClick={() => setViewMode('homemaker')}
+                  className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs transition-all"
+                >
+                  Return to Customer App
+                </button>
+              </div>
+            </div>
+          )
+        )}
       </main>
 
       {/* Global Modals */}
@@ -179,6 +215,7 @@ const MainContent: React.FC = () => {
       <CustomerAuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
+        targetRole={authTargetRole}
       />
     </div>
   );

@@ -18,8 +18,8 @@ export const ThermalReceiptModal: React.FC<ThermalReceiptModalProps> = ({ order,
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in print:p-0 print:bg-white">
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 text-slate-100 shadow-2xl relative print:border-none print:shadow-none print:bg-white print:text-black">
+    <div onClick={onClose} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in print:p-0 print:bg-white cursor-pointer">
+      <div onClick={(e) => e.stopPropagation()} className="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 text-slate-100 shadow-2xl relative print:border-none print:shadow-none print:bg-white print:text-black cursor-default">
         {/* Close Button (Hidden on Print) */}
         <button
           onClick={onClose}

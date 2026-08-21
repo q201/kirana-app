@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import type {
   ViewMode,
   LanguageMode,
+  ThemeMode,
   Product,
   CartItem,
   KiranaStore,
@@ -24,7 +25,15 @@ import { idempotencyEngine } from '../utils/idempotency';
 import { routeUserToStores, type GeofenceResult } from '../utils/geofence';
 
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
-import { getStoredCustomerSession, saveCustomerSession } from '../lib/supabaseAuth';
+import { getStoredCustomerSession, saveCustomerSession, clearCustomerSession } from '../lib/supabaseAuth';
+
+export interface UserProfileState {
+  name: string;
+  phone: string;
+  address: string;
+  houseNo: string;
+  roles: string[];
+}
 
 interface AppContextType {
   viewMode: ViewMode;
@@ -33,9 +42,13 @@ interface AppContextType {
   languageMode: LanguageMode;
   setLanguageMode: (lang: LanguageMode) => void;
 
+  themeMode: ThemeMode;
+  setThemeMode: (theme: ThemeMode) => void;
+
   // Customer Registration Profile
-  userProfile: { name: string; phone: string; address: string; houseNo: string };
-  setUserProfile: (profile: { name: string; phone: string; address: string; houseNo: string }) => void;
+  userProfile: UserProfileState;
+  setUserProfile: (profile: Partial<UserProfileState> & { name: string; phone: string; address: string; houseNo: string }) => void;
+  logoutUser: () => void;
 
   // Supabase Status
   isSupabaseConnected: boolean;
@@ -95,15 +108,57 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+const getInitialViewModeFromUrl = (): ViewMode => {
+  const path = window.location.pathname.toLowerCase();
+  if (path.includes('/admin') || path.includes('/architecture')) {
+    return 'architecture';
+  }
+  if (path.includes('/merchant') || path.includes('/storeowner') || path.includes('/store')) {
+    return 'storeowner';
+  }
+  return 'homemaker';
+};
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [viewMode, setViewMode] = useState<ViewMode>('homemaker');
+  const [viewMode, setViewModeState] = useState<ViewMode>(getInitialViewModeFromUrl);
+  
+  const setViewMode = (mode: ViewMode) => {
+    setViewModeState(mode);
+    const targetPath = mode === 'architecture' ? '/admin' : mode === 'storeowner' ? '/merchant' : '/';
+    if (window.location.pathname !== targetPath) {
+      window.history.pushState(null, '', targetPath);
+    }
+  };
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setViewModeState(getInitialViewModeFromUrl());
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   const [languageMode, setLanguageMode] = useState<LanguageMode>('en');
+  const [themeMode, setThemeModeState] = useState<ThemeMode>(() => {
+    const saved = localStorage.getItem('mohalla_theme');
+    return (saved as ThemeMode) || 'dark';
+  });
+
+  const setThemeMode = (newTheme: ThemeMode) => {
+    setThemeModeState(newTheme);
+    localStorage.setItem('mohalla_theme', newTheme);
+    document.documentElement.setAttribute('data-theme', newTheme);
+  };
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', themeMode);
+  }, [themeMode]);
   
   // Sarita Vihar, Pocket B Coordinates (Default)
   const [userLat, setUserLat] = useState<number>(28.5292);
   const [userLng, setUserLng] = useState<number>(77.2910);
 
-  const [userProfile, setUserProfileState] = useState<{ name: string; phone: string; address: string; houseNo: string }>(
+  const [userProfile, setUserProfileState] = useState<UserProfileState>(
     () => {
       const stored = getStoredCustomerSession();
       if (stored) {
@@ -111,29 +166,52 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           name: stored.name,
           phone: stored.phone,
           address: stored.address,
-          houseNo: stored.houseNo
+          houseNo: stored.houseNo,
+          roles: stored.roles || ['customer']
         };
       }
       return {
         name: 'Guest Homemaker',
         phone: '',
         address: '',
-        houseNo: ''
+        houseNo: '',
+        roles: []
       };
     }
   );
 
-  const setUserProfile = (profile: { name: string; phone: string; address: string; houseNo: string }) => {
-    setUserProfileState(profile);
+  const setUserProfile = (profile: Partial<UserProfileState> & { name: string; phone: string; address: string; houseNo: string }) => {
+    const updatedRoles = profile.roles || (userProfile.roles.length > 0 ? userProfile.roles : ['customer']);
+    const fullProfile: UserProfileState = {
+      name: profile.name,
+      phone: profile.phone,
+      address: profile.address,
+      houseNo: profile.houseNo,
+      roles: updatedRoles
+    };
+    setUserProfileState(fullProfile);
     saveCustomerSession({
       id: 'cust_' + Math.random().toString(36).substring(2, 8),
       name: profile.name,
       phone: profile.phone,
       address: profile.address,
       houseNo: profile.houseNo,
-      roles: ['customer']
+      roles: updatedRoles
     });
   };
+
+  const logoutUser = () => {
+    clearCustomerSession();
+    setUserProfileState({
+      name: 'Guest Homemaker',
+      phone: '',
+      address: '',
+      houseNo: '',
+      roles: []
+    });
+    setViewMode('homemaker');
+  };
+
   
   const [products, setProducts] = useState<Product[]>(isSupabaseConfigured() ? [] : INITIAL_PRODUCTS);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -570,8 +648,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setViewMode,
         languageMode,
         setLanguageMode,
+        themeMode,
+        setThemeMode,
         userProfile,
         setUserProfile,
+        logoutUser,
         isSupabaseConnected,
         userLat,
         userLng,

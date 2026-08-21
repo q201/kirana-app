@@ -1,5 +1,7 @@
 export type ViewMode = 'homemaker' | 'storeowner' | 'architecture';
 export type LanguageMode = 'en' | 'hi';
+export type ThemeMode = 'dark' | 'light' | 'emerald' | 'sapphire' | 'sunset' | 'cyberpunk';
+
 
 export interface Product {
   id: string;
