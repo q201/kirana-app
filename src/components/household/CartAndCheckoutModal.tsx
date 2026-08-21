@@ -86,7 +86,7 @@ export const CartAndCheckoutModal: React.FC<CartModalProps> = ({ isOpen, onClose
             <CheckCircle2 className="w-16 h-16 text-emerald-400 mx-auto animate-bounce" />
             <h3 className="text-xl font-black text-white">Order Confirmed Live!</h3>
             <p className="text-xs text-slate-400 max-w-sm mx-auto">
-              Order <span className="text-amber-400 font-mono font-bold">{successOrder.id}</span> sent directly to Kirana Store & saved in Supabase database!
+              Order <span className="text-amber-400 font-mono font-bold">{successOrder.id}</span> sent directly to Kirana Store & saved in Cloud Database!
             </p>
 
             <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 max-w-sm mx-auto text-xs space-y-2 text-left">

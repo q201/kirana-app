@@ -100,7 +100,7 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({
               onClick={() => setIsEditStoreOpen(true)}
               className="px-2.5 py-1 bg-slate-950 text-amber-400 font-bold text-[11px] rounded-lg hover:bg-slate-900 border border-amber-400/50 shadow"
             >
-              ✏️ Edit Store Profile (Supabase DB)
+              ✏️ Edit Store Profile
             </button>
           </div>
         </div>
@@ -602,14 +602,14 @@ export const StoreDashboard: React.FC<StoreDashboardProps> = ({
               </div>
 
               <div className="p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-[11px] text-amber-300">
-                ⚡ Saves changes live directly into Supabase `stores` PostgreSQL database table!
+                ⚡ Saves store profile changes live directly to Cloud Database.
               </div>
 
               <button
                 type="submit"
                 className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl text-xs transition-transform hover:scale-105"
               >
-                Save Store Profile to Supabase DB
+                Save Store Profile Changes
               </button>
             </form>
           </div>

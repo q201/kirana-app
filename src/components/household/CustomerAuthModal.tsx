@@ -118,12 +118,12 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({
                   ? 'Kirana Merchant Login Required'
                   : targetRole === 'admin'
                   ? 'Platform Admin Login Required'
-                  : (languageMode === 'hi' ? 'मोहल्ला ग्राहक प्रमाणीकरण' : 'Supabase RBAC Auth')}
+                  : (languageMode === 'hi' ? 'मोहल्ला ग्राहक प्रमाणीकरण' : 'User Account Authentication')}
               </h3>
               <p className="text-[11px] text-slate-400">
                 {targetRole
                   ? `Access restricted to ${targetRole.replace('_', ' ')} accounts`
-                  : (languageMode === 'hi' ? 'लाइव Supabase डेटाबेस से कनेक्टेड' : 'Live Supabase Role-Based System')}
+                  : (languageMode === 'hi' ? 'सुरक्षित प्रमाणीकरण प्रणाली' : 'Secure Encrypted Account Access')}
               </p>
             </div>
           </div>
@@ -182,7 +182,7 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({
           <div className="py-8 text-center space-y-3">
             <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto animate-bounce" />
             <h4 className="text-lg font-black text-white">
-              {tab === 'signin' ? 'Welcome Back!' : 'Account Created in Supabase!'}
+              {tab === 'signin' ? 'Welcome Back!' : 'Account Created Successfully!'}
             </h4>
             <p className="text-xs text-slate-400">
               Authenticated as <span className="text-amber-300 font-bold">{userProfile?.name}</span>.
@@ -227,11 +227,11 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({
               className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 font-black rounded-xl text-sm transition-transform hover:scale-[1.02] shadow-lg flex items-center justify-center gap-1.5 mt-2"
             >
               {loading ? (
-                <span>Authenticating with Supabase...</span>
+                <span>Authenticating User...</span>
               ) : (
                 <>
                   <LogIn className="w-4 h-4" />
-                  <span>Sign In to Supabase Account</span>
+                  <span>Sign In to Account</span>
                 </>
               )}
             </button>
@@ -350,7 +350,7 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({
 
             <div className="p-2 bg-amber-500/10 border border-amber-500/20 rounded-xl text-[11px] text-amber-300 flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0" />
-              <span>Creates user record directly in Supabase `customers` PostgreSQL database table!</span>
+              <span>Creates encrypted user profile record in secure cloud database.</span>
             </div>
 
             <button
@@ -359,11 +359,11 @@ export const CustomerAuthModal: React.FC<CustomerAuthModalProps> = ({
               className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 font-black rounded-xl text-sm transition-transform hover:scale-[1.02] shadow-lg flex items-center justify-center gap-1.5 mt-2"
             >
               {loading ? (
-                <span>Registering on Supabase...</span>
+                <span>Creating Account...</span>
               ) : (
                 <>
                   <Sparkles className="w-4 h-4" />
-                  <span>Create Account & Register in Supabase</span>
+                  <span>Create Account & Continue</span>
                 </>
               )}
             </button>
