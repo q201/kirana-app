@@ -122,6 +122,27 @@ This document outlines all functional use cases across the four primary actor ro
 ### UC-401: System Architecture & Idempotency Audit Log Monitoring
 - **Actors**: Platform Admin 🛡️
 - **Main Flow**:
-  1. Admin switches view mode to **System Architecture**.
+  1. Admin switches view mode to **System Architecture** (`/admin`).
   2. Views real-time database connectivity, connected tables (`products`, `stores`, `orders`, `khata_entries`, `customers`, `roles`, `user_roles`), and active Edge Functions.
   3. Reviews live **Idempotency Protection Audit Log** tracking duplicate request filtering.
+
+### UC-402: Admin Theme Manager & Brand Customizer
+- **Actors**: Platform Admin 🛡️
+- **Main Flow**:
+  1. Admin opens **Theme Selector** sub-tab in Admin System Design View.
+  2. Reviews visual theme cards for 6 themes (`Classic Dark Slate`, `Clean Light`, `Emerald Grocer`, `Midnight Sapphire`, `Sunset Ochre`, `Cyberpunk Neon`).
+  3. Selects theme; application CSS `data-theme` attribute updates globally across all pages in real-time.
+  4. Admin can click **"Save System Default"** or **"Copy Theme Tokens"**.
+
+### UC-403: Role-Gated Admin Authentication & Protected Route Guard
+- **Actors**: Platform Admin 🛡️
+- **Main Flow**:
+  1. Unauthenticated users see an **"Admin Login"** button in Navbar instead of privileged System Design controls.
+  2. Clicking **"Admin Login"** triggers `CustomerAuthModal` targeting `admin` role.
+  3. Direct navigation to `/admin` URL without admin privileges displays a protected guard card prompting for Admin Authentication.
+
+### UC-404: HTML5 History Routing & Flow URL Synchronization
+- **Actors**: Homemaker 🏡, Store Owner 🏪, Platform Admin 🛡️
+- **Main Flow**:
+  1. Navigating between views updates browser URL history (`/`, `/merchant`, `/admin`).
+  2. Reloading or sharing direct route URLs opens the exact corresponding view mode.

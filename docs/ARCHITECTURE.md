@@ -83,3 +83,18 @@ To safeguard against poor mobile network connectivity or duplicate button clicks
 ### D. Dual Language & Multi-Role UI Context
 - Native support for **English** and **Hindi (हिन्दी)**.
 - Single-click role switching between **Homemaker (Customer)**, **Store Owner (Kirana Uncle)**, and **Platform Admin**.
+
+### E. Multi-Theme Engine & Admin Appearance Customizer
+- **6 Theme Modes**: Supports curated color themes (`dark`, `light`, `emerald`, `sapphire`, `sunset`, `cyberpunk`).
+- **Global CSS Variables**: Managed via dataset attributes (`html[data-theme="..."]`) for instant zero-reload transitions.
+- **Admin Customizer**: Integrated visual Theme Manager (`AdminThemeSelector.tsx`) with color swatches, component preview sandbox, and token exporter.
+
+### F. HTML5 History API Routing & Distinct Flow URLs
+- Synchronizes app view mode with browser address bar URLs:
+  - **Homemaker Customer App**: `/` or `/customer`
+  - **Kirana Merchant Dashboard**: `/merchant` or `/storeowner`
+  - **Platform Admin Panel**: `/admin`
+- Protected Route Guard: Unauthenticated access to `/admin` renders a Platform Admin Authentication Required guard screen.
+
+### G. Universal Modal UX & Backdrop Click-to-Close
+- All 7 overlay modals (`VoiceOrderModal`, `PhotoOrderModal`, `CartAndCheckoutModal`, `CustomerAuthModal`, `LiveDeliveryTrackingModal`, `ThermalReceiptModal`, `DeliveryAssignmentModal`) support backdrop click-to-close behavior with event propagation isolation.
